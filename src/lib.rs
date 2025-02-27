@@ -2,25 +2,24 @@ use anchor_lang::prelude::*;
 
 // This is your program's public key and it will update
 // automatically when you build the project.
-declare_id!("DnF679A7wzSPLWNSxhxXLq1kLwPxdzfP8YsxFbPf7Atj");
+declare_id!("2QeyrXhVXq7ScR5QVgp9SArUTwnu7VjT1d5keCfbipUf");
 
 #[program]
 mod hello_anchor {
     use super::*;
-    pub fn initialize(ctx: Context<Initialize>, data: u64) -> Result<()> {
-        ctx.accounts.new_account.data = data;
-        msg!("Changed data to: {}!", data); // Message will show up in the tx logs
+    pub fn initialize(ctx: Context<Initialize>, data: String) -> Result<()> {
+        let new_account = &mut ctx.accounts.new_account;
+        new_account.data = data.clone();
+        msg!("Stored JSON data: {}!", data);
         Ok(())
     }
 }
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
-    // We must specify the space in order to initialize an account.
-    // First 8 bytes are default account discriminator,
-    // next 8 bytes come from NewAccount.data being type u64.
-    // (u64 = 64 bits unsigned integer = 8 bytes)
-    #[account(init, payer = signer, space = 8 + 8)]
+    // Space: 8 bytes discriminator + 4 bytes string length prefix + 1024 bytes for JSON string
+    // You can adjust the 1024 based on your expected JSON size
+    #[account(init, payer = signer, space = 8 + 4 + 1024)]
     pub new_account: Account<'info, NewAccount>,
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -29,5 +28,5 @@ pub struct Initialize<'info> {
 
 #[account]
 pub struct NewAccount {
-    data: u64
+    data: String
 }
